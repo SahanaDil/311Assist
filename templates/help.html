@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <title>Help | 311Assist</title>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="{{ url_for('index') }}">Back to case search</a>
+        <a href="{{ url_for('about') }}">About this project</a>
+    </nav>
+
+    <header class="masthead">
+        <h1>Help</h1>
+        <p class="intro">
+            Official Houston resources for submitting and following up on 311 requests.
+        </p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Houston resources</h2>
+            <p>
+                Use these links to visit the City of Houston and Houston 311 websites.
+            </p>
+
+            <ul>
+                <li>
+                    <a href="https://www.houstontx.gov/" target="_blank" rel="noopener noreferrer">
+                        City of Houston
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.houstontx.gov/311/" target="_blank" rel="noopener noreferrer">
+                        Houston 311
+                    </a>
+                </li>
+                <li>
+                    <a href="https://houston311.powerappsportals.us/en-US/" target="_blank" rel="noopener noreferrer">
+                        Houston 311 service portal
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>About these links</h2>
+            <p>
+                311Assist uses a downloaded data snapshot. Visit the official
+                websites for current information, to submit a request, or to
+                follow up on an existing request.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>311Assist | Houston 311 resource links</p>
+    </footer>
+</body>
+</html>

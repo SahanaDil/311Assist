@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <title>About | 311Assist</title>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="{{ url_for('index') }}">Back to case search</a>
+        <a href="{{ url_for('help_page') }}">Help</a>
+    </nav>
+
+    <header class="masthead">
+        <h1>Why 311Assist?</h1>
+        <p class="intro">
+            A tool to make reviewing 311 cases in Houston clearer and more efficient.
+        </p>
+    </header>
+
+    <main>
+        <section>
+            <h2>What it does</h2>
+            <p>
+                311Assist helps Houston 311 staff look up existing records
+                by case number or complete street address. It brings the
+                recorded status, department, dates, and notes together in
+                one place.
+            </p>
+            <p>
+            </p>
+        </section>
+
+        <section>
+            <h2>Important limits</h2>
+            <p>
+                Results come from a downloaded data snapshot, not a live
+                connection to Houston 311. The app does not submit or
+                change service requests. Verify current information before
+                taking action.
+            </p>
+        </section>
+
+        <section>
+            <h2>Project status</h2>
+            <p>
+                This is an independent student-built prototype and is not
+                officially affiliated with the City of Houston.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>311Assist | 2026 Congressional App Challenge entry</p>
+    </footer>
+</body>
+</html>

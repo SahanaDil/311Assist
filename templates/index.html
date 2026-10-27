@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <title>311Assist</title>
+</head>
+
+<script>
+    const records = {{ matches | tojson }};
+
+    function updateSelection() {
+        const selected = document.querySelectorAll(
+            ".case-choice:checked"
+        );
+
+        document.getElementById("selection-count").textContent =
+            selected.length + " case(s) selected.";
+
+        document.getElementById("address-brief").value = "";
+        document.getElementById("brief-area").hidden = true;
+        document.getElementById("brief-message").textContent = "";
+        document.getElementById("copy-help").textContent = "";
+    }
+
+    function chooseAll(checked) {
+        const boxes = document.querySelectorAll(".case-choice");
+
+        boxes.forEach(function(box) {
+            box.checked = checked;
+        });
+
+        updateSelection();
+    }
+
+    function makeBrief() {
+        const selected = document.querySelectorAll(
+            ".case-choice:checked"
+        );
+
+        const message = document.getElementById("brief-message");
+
+        if (selected.length === 0) {
+            message.textContent = "Select at least one case first.";
+            return;
+        }
+
+        const firstCase = records[Number(selected[0].value)];
+
+        let text = "SELECTED CASE REVIEW\n\n";
+        text += "Address: "
+            + (firstCase["Incident Address"] || "Not recorded")
+            + "\n";
+
+        text += "Selected records: " + selected.length + "\n\n";
+
+        const fields = [
+            ["Incident Case Type", "Issue type"],
+            ["Status", "Recorded status"],
+            ["Department", "Recorded department"],
+            ["Created Date Local", "Created"],
+            ["Closed Date", "Recorded closure date"],
+            ["Resolve By Time", "Recorded target"],
+            ["Extract Date", "Snapshot date"]
+        ];
+
+        selected.forEach(function(box) {
+            const record = records[Number(box.value)];
+
+            const number = record["Case Number"]
+                || record["365 Case Number"]
+                || "Not recorded";
+
+            text += "Case: " + number + "\n";
+
+            fields.forEach(function(field) {
+                const key = field[0];
+                const label = field[1];
+
+                text += label + ": "
+                    + (record[key] || "Not recorded")
+                    + "\n";
+            });
+
+            text += "Review: " + record.review.label + "\n";
+            text += record.review.detail + "\n\n";
+
+            text += "Description:\n";
+            text += (record["Description"] || "Not recorded");
+            text += "\n\n";
+
+            text += "Latest case notes:\n";
+            text += (record["Latest Case Notes"] || "Not recorded");
+            text += "\n\n";
+
+            text += "Resolution notes:\n";
+            text += (record["Resolution Notes"] || "Not recorded");
+            text += "\n\n----------------------------------------\n\n";
+        });
+
+        text += "THINGS TO VERIFY\n";
+        text += "- Which selected case concerns the current inquiry?\n";
+        text += "- What is its current status?\n";
+        text += "- Do the notes explain any recorded closure?\n\n";
+
+        text += "Prepared from a downloaded Houston 311 extract.\n";
+        text += "Records at the same address may concern different incidents.\n";
+        text += "Current status has not been verified.\n";
+        text += "Date comparisons use calendar dates only; ";
+        text += "timezones are not normalized.\n";
+        text += "Recorded target dates are not guaranteed completion deadlines.";
+
+        document.getElementById("address-brief").value = text;
+        document.getElementById("brief-area").hidden = false;
+        document.getElementById("copy-help").textContent = "";
+
+        message.textContent =
+            "Brief prepared for " + selected.length + " case(s).";
+    }
+
+    function selectBrief() {
+        const brief = document.getElementById("address-brief");
+
+        brief.focus();
+        brief.select();
+
+        document.getElementById("copy-help").textContent =
+            "Text selected. Press Ctrl+C on Windows or Command+C on Mac to copy.";
+    }
+</script>
+
+<body>
+    <nav class="top-nav">
+        <a href="{{ url_for('about') }}">About this project</a>
+        <a href="{{ url_for('help_page') }}">Help</a>
+    </nav>
+
+    <h1>311Assist</h1>
+    <p>This app aims to help 311 agents in Houston look up records, then review their recorded status, department, dates, and notes.</p>
+    <p>
+        This is an entry for the 2026 Congressional App Challenge.
+        It is not officially affiliated with The City of Houston.
+    </p>
+
+    <form method="post" action="/">
+    <label for="mode">Search by</label>
+
+    <select id="mode" name="mode">
+        <option value="case"
+            {% if mode == 'case' %}selected{% endif %}>
+            Case number
+        </option>
+
+        <option value="address"
+            {% if mode == 'address' %}selected{% endif %}>
+            Street address
+        </option>
+    </select>
+
+    <label for="query">Case number or street address</label>
+
+    <input
+        id="query"
+        name="query"
+        type="text"
+        value="{{ query }}"
+        required
+    >
+
+    <button type="submit">Find cases</button>
+
+    <p>
+        Address search requires the complete address as recorded
+        in the extract. Capitalization and punctuation are ignored.
+    </p>
+</form>
+
+    {% if error %}
+        <p role="alert">{{ error }}</p>
+    {% endif %}
+
+    {% if searched %}
+        <h2>Search results</h2>
+
+        {% if matches %}
+            <p>{{ matches | length }} matching record(s).</p>
+        
+        {% if mode == 'address' %}
+            <section>
+                <h3>Address review</h3>
+
+                <p>
+                    {{ matches[0].get('Incident Address') or query }}
+                </p>
+
+                <p>
+                    Records are listed from oldest to newest by creation date.
+                    Records without a usable creation date appear last.
+                    Matching addresses do not necessarily mean the same incident.
+                </p>
+
+                <p>Select the cases you want to include in the review brief.</p>
+
+                <button type="button" onclick="chooseAll(true)">
+                    Select all
+                </button>
+
+                <button type="button" onclick="chooseAll(false)">
+                    Clear selection
+                </button>
+
+                <p id="selection-count" role="status">0 cases selected.</p>
+
+                <ol>
+                    {% for case in matches %}
+                        <li>
+                            <p>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        class="case-choice"
+                                        value="{{ loop.index0 }}"
+                                        onchange="updateSelection()"
+                                    >
+                                    Case {{ case.get('Case Number')
+                                           or case.get('365 Case Number') }}
+                                </label>
+                            </p>
+
+                            <p>
+                                <a href="#case-{{ loop.index }}">
+                                    View full record
+                                </a>
+                                —
+                                {{ case.get('Incident Case Type')
+                                   or 'Issue type not recorded' }}
+                            </p>
+
+                            <p>
+                                Created:
+                                {{ case.get('Created Date Local') or 'Not recorded' }}
+                                <br>
+                                Recorded status:
+                                {{ case.get('Status') or 'Not recorded' }}
+                                <br>
+                                Recorded department:
+                                {{ case.get('Department') or 'Not recorded' }}
+                            </p>
+                        </li>
+                    {% endfor %}
+                </ol>
+
+                <button type="button" onclick="makeBrief()">
+                    Prepare brief from selected cases
+                </button>
+
+                <p id="brief-message" role="status"></p>
+
+                <div id="brief-area" hidden>
+                    <p>
+                        Please check the current records before using this summary.
+                    </p>
+
+                    <label for="address-brief">Selected case review brief</label>
+
+                    <textarea
+                        id="address-brief"
+                        rows="18"
+                        readonly
+                        style="width: 100%; box-sizing: border-box;"
+                    ></textarea>
+
+                    <button
+                        type="button"
+                        onclick="selectBrief()"
+                    >
+                        Select brief to copy
+                    </button>
+
+                    <p id="copy-help" role="status"></p>
+                </div>
+            </section>
+        {% endif %}
+
+            {% for case in matches %}
+                <article class="case-card" id="case-{{ loop.index }}">
+                    <header class="case-summary">
+                        <p class="case-summary-eyebrow">HOUSTON 311 RECORD</p>
+
+                        <h3>
+                            Case {{ case.get('Case Number')
+                                    or case.get('365 Case Number')
+                                    or 'Number not recorded' }}
+                        </h3>
+
+                        <p class="case-summary-type">
+                            {{ case.get('Incident Case Type')
+                               or 'Issue type not recorded' }}
+                        </p>
+
+                        <p class="case-summary-status">
+                            Recorded status:
+                            <span>{{ case.get('Status') or 'Not recorded' }}</span>
+                        </p>
+
+                        <details>
+                            <summary>Show all case details</summary>
+
+                            <dl>
+                                {% for field in [
+                                    '365 Case Number',
+                                    'Case Number',
+                                    'Incident Address',
+                                    'Incident Case Type',
+                                    'Status',
+                                    'Created Date Local',
+                                    'Closed Date',
+                                    'Resolve By Time',
+                                    'Department',
+                                    'Division',
+                                    'Queue',
+                                    'Council District',
+                                    'Extract Date'
+                                ] %}
+                                    <dt>{{ field }}</dt>
+                                    <dd>{{ case.get(field) or 'Not recorded' }}</dd>
+                                {% endfor %}
+                            </dl>
+                        </details>
+                    </header>
+                    <section class="review">
+                        <h4>{{ case['review']['label'] }}</h4>
+                        <p>{{ case['review']['detail'] }}</p>
+                    </section>
+
+                    {% for field in [
+                        'Description',
+                        'Latest Case Notes',
+                        'Resolution Notes'
+                    ] %}
+                        <h4>{{ field }}</h4>
+                        <p style="white-space: pre-wrap;">{{ case.get(field) or 'Not recorded' }}</p>
+                    {% endfor %}
+                </article>
+                <hr>
+            {% endfor %}
+
+        {% else %}
+            <p>
+                No matching records were found in this extract.
+                This doesn't guarantee that the case doesn't exist.
+                If you searched an address, please check the complete address and spelling.
+            </p>
+        {% endif %}
+    {% endif %}
+
+    <footer>
+        <p>
+            The results are from a snapshot of downloaded data (piped 311 MTD data). They are not a live status update.
+        </p>
+    </footer>
+</body>
+</html>
