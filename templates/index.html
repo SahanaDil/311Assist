@@ -147,9 +147,24 @@
         This is an entry for the 2026 Congressional App Challenge.
         It is not officially affiliated with The City of Houston.
     </p>
+    
+    <p>
+    Example case numbers:
+    <code>2600356178</code>,
+    <code>2600356171</code>
+    </p>
+
+    <p>
+    Example addresses:
+    <br>
+    <code>8627 SANDS POINT DR HOUSTON 77036</code>
+    <br>
+    <code>9422 HIGHMEADOW DR HOUSTON TX 77063</code>
+    </p>
+    
     <p>
         <a href="https://github.com/SahanaDil/311Assist/blob/main/data/311-mtd.txt">
-            Use the case #'s and addresses here to test the app
+            Dataset used
         </a>
     </p>
     <form method="post" action="/">
@@ -158,7 +173,7 @@
     <select id="mode" name="mode">
         <option value="case"
             {% if mode == 'case' %}selected{% endif %}>
-            Case number
+            Case number 
         </option>
 
         <option value="address"
